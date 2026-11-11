@@ -1,0 +1,11 @@
+# secrets and local state - never upload
+.env
+whatsapp_agent/.env
+whatsapp_agent/home_state.json
+# python
+venv/
+.venv/
+__pycache__/
+*.pyc
+# system
+.DS_Store

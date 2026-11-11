@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>Home Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Home">
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand"><h1>Home Control</h1><p id="clock">&nbsp;</p></div>
+    <div class="top-r">
+      <span class="pill" id="conn"><i data-i="wifi-off"></i><b>Connecting</b></span>
+      <button class="icon-btn" id="limBtn" aria-label="Limits"><i data-i="sliders-horizontal"></i></button>
+      <button class="icon-btn" id="ipBtn" aria-label="Connection"><i data-i="settings-2"></i></button>
+    </div>
+  </header>
+
+  <div>
+    <div class="alert hidden" id="smokeAlert"><i data-i="triangle-alert"></i><span>Smoke level is above the limit</span></div>
+    <div class="sensors" id="sensors"></div>
+  </div>
+
+  <section class="devs" id="devs"></section>
+
+  <div class="actions">
+    <button class="allon" id="allOn">All ON</button>
+    <button class="alloff" id="allOff">All OFF</button>
+  </div>
+</main>
+
+<div class="modal hidden" id="limModal">
+  <div class="sheet">
+    <h3>Limits for the sensor lights</h3>
+    <div class="lim"><label><span>Smoke light on above</span><b id="lSmoke"></b></label><input type="range" id="sSmoke" min="5" max="100" step="1"></div>
+    <div class="lim"><label><span>Temperature light on above</span><b id="lTemp"></b></label><input type="range" id="sTemp" min="15" max="60" step="0.5"></div>
+    <div class="lim"><label><span>Dark light on below</span><b id="lLux"></b></label><input type="range" id="sLux" min="5" max="1000" step="5"></div>
+    <div class="row"><button class="ghost" id="limClose">Close</button><button class="primary" id="apply">Apply limits</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="sheet">
+    <h3>Connection</h3>
+    <div class="seg2">
+      <label><input type="radio" name="mode" id="mCloud"><span>Cloud (anywhere)</span></label>
+      <label><input type="radio" name="mode" id="mLocal"><span>Local WiFi</span></label>
+    </div>
+    <div id="cloudBox">
+      <p>Adafruit IO details. They stay only on this device.</p>
+      <input id="cUser" placeholder="Adafruit IO username" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="cKey" type="password" placeholder="Adafruit IO key" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <details><summary>Advanced</summary>
+        <input id="cWs" placeholder="WebSocket address" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </details>
+    </div>
+    <div id="localBox" class="hidden">
+      <p>Arduino IP from the Serial Monitor. Works only on the same WiFi.</p>
+      <input id="ipInput" inputmode="decimal" placeholder="192.168.1.50" autocomplete="off">
+    </div>
+    <div class="row">
+      <button class="ghost" id="ipCancel">Cancel</button>
+      <button class="primary" id="ipSave">Connect</button>
+    </div>
+  </div>
+</div>
+
+<script>window.ICONS={"lightbulb":"<path d=\"M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5\" /> <path d=\"M9 18h6\" /> <path d=\"M10 22h4\" />","fan":"<path d=\"M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z\" /> <path d=\"M12 12v.01\" />","flame":"<path d=\"M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /> <path d=\"M12 2v2\" /> <path d=\"M12 20v2\" /> <path d=\"m4.93 4.93 1.41 1.41\" /> <path d=\"m17.66 17.66 1.41 1.41\" /> <path d=\"M2 12h2\" /> <path d=\"M20 12h2\" /> <path d=\"m6.34 17.66-1.41 1.41\" /> <path d=\"m19.07 4.93-1.41 1.41\" />","droplets":"<path d=\"M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z\" /> <path d=\"M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97\" />","wifi":"<path d=\"M12 20h.01\" /> <path d=\"M2 8.82a15 15 0 0 1 20 0\" /> <path d=\"M5 12.859a10 10 0 0 1 14 0\" /> <path d=\"M8.5 16.429a5 5 0 0 1 7 0\" />","wifi-off":"<path d=\"M12 20h.01\" /> <path d=\"M8.5 16.429a5 5 0 0 1 7 0\" /> <path d=\"M5 12.859a10 10 0 0 1 5.17-2.69\" /> <path d=\"M19 12.859a10 10 0 0 0-2.007-1.523\" /> <path d=\"M2 8.82a15 15 0 0 1 4.177-2.643\" /> <path d=\"M22 8.82a15 15 0 0 0-11.288-3.764\" /> <path d=\"m2 2 20 20\" />","sliders-horizontal":"<line x1=\"21\" x2=\"14\" y1=\"4\" y2=\"4\" /> <line x1=\"10\" x2=\"3\" y1=\"4\" y2=\"4\" /> <line x1=\"21\" x2=\"12\" y1=\"12\" y2=\"12\" /> <line x1=\"8\" x2=\"3\" y1=\"12\" y2=\"12\" /> <line x1=\"21\" x2=\"16\" y1=\"20\" y2=\"20\" /> <line x1=\"12\" x2=\"3\" y1=\"20\" y2=\"20\" /> <line x1=\"14\" x2=\"14\" y1=\"2\" y2=\"6\" /> <line x1=\"8\" x2=\"8\" y1=\"10\" y2=\"14\" /> <line x1=\"16\" x2=\"16\" y1=\"18\" y2=\"22\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","settings-2":"<path d=\"M20 7h-9\" /> <path d=\"M14 17H5\" /> <circle cx=\"17\" cy=\"17\" r=\"3\" /> <circle cx=\"7\" cy=\"7\" r=\"3\" />","x":"<path d=\"M18 6 6 18\" /> <path d=\"m6 6 12 12\" />","triangle-alert":"<path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\" /> <path d=\"M12 9v4\" /> <path d=\"M12 17h.01\" />"};</script>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
